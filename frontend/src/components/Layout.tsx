@@ -3,6 +3,7 @@ import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { Background } from './ui/Background';
+import { isDemoModeActive } from '../api/client';
 
 /** Mask a phone for display: +88017*****45 */
 function maskPhone(phone: string): string {
@@ -239,6 +240,15 @@ export function Layout() {
           </div>
         </div>
       </header>
+
+      {isDemoModeActive() && (
+        <aside aria-label="Demo mode notice" className="bg-primary/10 border-b border-primary/20 px-4 py-2 text-center text-xs text-textSecondary flex items-center justify-center gap-2">
+          <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span>
+            <strong className="text-primary font-semibold">Interactive Demo Mode</strong> • Concurrency seat locks, reservation countdown, & instant OTP verification (use <code className="font-mono font-bold text-primary bg-primary/10 px-1 py-0.5 rounded">123456</code>).
+          </span>
+        </aside>
+      )}
 
       <main className="flex-1 max-w-7xl mx-auto w-full px-5 py-10 relative z-10">
         <Outlet />

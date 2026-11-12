@@ -1,8 +1,11 @@
+import { mockStore } from './mockStore';
+
 const getBasename = () => {
   const match = typeof window !== 'undefined' ? window.location.pathname.match(/^\/proxy\/\d+/) : null;
   return match ? match[0] : '';
 };
 const API_BASE = import.meta.env.VITE_API_BASE_URL || getBasename();
+let backendUnavailable = false;
 
 export class ApiRequestError extends Error {
   status: number;
@@ -195,54 +198,150 @@ export interface DetailedTicket {
   };
 }
 
+async function withFallback<T>(fetcher: () => Promise<T>, fallback: () => Promise<T>): Promise<T> {
+  if (backendUnavailable || !API_BASE) {
+    backendUnavailable = true;
+    return fallback();
+  }
+  try {
+    return await fetcher();
+  } catch (err: any) {
+    if (
+      err?.status === 404 ||
+      err?.status === 502 ||
+      err?.status === 503 ||
+      err?.message?.includes('fetch') ||
+      err?.message?.includes('Failed to fetch') ||
+      err?.message?.includes('NetworkError') ||
+      err?.message?.includes('JSON')
+    ) {
+      backendUnavailable = true;
+      return fallback();
+    }
+    throw err;
+  }
+}
+
+export const isDemoModeActive = () => backendUnavailable || !API_BASE;
+
 export const api = {
   // Auth API
   register: (payload: { name: string; email: string; phone: string; password: string; confirmPassword?: string }) =>
-    request<AuthResponse>('/auth/register', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }),
+    withFallback(
+      () =>
+        request<AuthResponse>('/auth/register', {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        }),
+      () => mockStore.register(payload)
+    ),
 
   login: (payload: { identifier?: string; email?: string; phone?: string; password: string }) =>
-    request<AuthResponse>('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }),
+    withFallback(
+      () =>
+        request<AuthResponse>('/auth/login', {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        }),
+      () => mockStore.login(payload)
+    ),
 
-  me: () => request<{ user: User }>('/auth/me'),
+  me: () =>
+    withFallback(
+      () => request<{ user: User }>('/auth/me'),
+      () => mockStore.me()
+    ),
 
-  logout: () => request<{ message: string }>('/auth/logout', { method: 'POST' }),
+  logout: () =>
+    withFallback(
+      () => request<{ message: string }>('/auth/logout', { method: 'POST' }),
+      () => mockStore.logout()
+    ),
 
-  getMyBookings: () => request<UserBooking[]>('/auth/my-bookings'),
+  getMyBookings: () =>
+    withFallback(
+      () => request<UserBooking[]>('/auth/my-bookings'),
+      () => mockStore.getMyBookings()
+    ),
 
-  getMyTickets: () => request<UserTicket[]>('/auth/my-tickets'),
+  getMyTickets: () =>
+    withFallback(
+      () => request<UserTicket[]>('/auth/my-tickets'),
+      () => mockStore.getMyTickets()
+    ),
 
   // Movies & Catalog API
-  listMovies: () => request<Movie[]>('/api/movies'),
-  getMovie: (id: string) => request<Movie>(`/api/movies/${id}`),
-  listShowtimes: (movieId: string) => request<Showtime[]>(`/api/movies/${movieId}/showtimes`),
-  getShowtime: (id: string) => request<Showtime & { movie_title: string }>(`/api/showtimes/${id}`),
-  getSeatMap: (showtimeId: string) => request<Seat[]>(`/api/showtimes/${showtimeId}/seats`),
+  listMovies: () =>
+    withFallback(
+      () => request<Movie[]>('/api/movies'),
+      () => mockStore.listMovies()
+    ),
+
+  getMovie: (id: string) =>
+    withFallback(
+      () => request<Movie>(`/api/movies/${id}`),
+      () => mockStore.getMovie(id)
+    ),
+
+  listShowtimes: (movieId: string) =>
+    withFallback(
+      () => request<Showtime[]>(`/api/movies/${movieId}/showtimes`),
+      () => mockStore.listShowtimes(movieId)
+    ),
+
+  getShowtime: (id: string) =>
+    withFallback(
+      () => request<Showtime & { movie_title: string }>(`/api/showtimes/${id}`),
+      () => mockStore.getShowtime(id)
+    ),
+
+  getSeatMap: (showtimeId: string) =>
+    withFallback(
+      () => request<Seat[]>(`/api/showtimes/${showtimeId}/seats`),
+      () => mockStore.getSeatMap(showtimeId)
+    ),
 
   holdSeat: (showtimeId: string, seatId: string) =>
-    request<HoldResponse>(`/api/showtimes/${showtimeId}/seats/${seatId}/hold`, {
-      method: 'POST',
-      body: JSON.stringify({}),
-    }),
+    withFallback(
+      () =>
+        request<HoldResponse>(`/api/showtimes/${showtimeId}/seats/${seatId}/hold`, {
+          method: 'POST',
+          body: JSON.stringify({}),
+        }),
+      () => mockStore.holdSeat(showtimeId, seatId)
+    ),
 
-  getBooking: (ref: string) => request<Booking>(`/api/bookings/${ref}`),
+  getBooking: (ref: string) =>
+    withFallback(
+      () => request<Booking>(`/api/bookings/${ref}`),
+      () => mockStore.getBooking(ref)
+    ),
 
-  sendOtp: (ref: string) => request<{ otpRef: string; code?: string }>(`/api/bookings/${ref}/otp/send`, { method: 'POST' }),
+  sendOtp: (ref: string) =>
+    withFallback(
+      () => request<{ otpRef: string; code?: string }>(`/api/bookings/${ref}/otp/send`, { method: 'POST' }),
+      () => mockStore.sendOtp(ref)
+    ),
 
   verifyOtp: (ref: string, code: string) =>
-    request<{ verified: boolean; message?: string }>(`/api/bookings/${ref}/otp/verify`, {
-      method: 'POST',
-      body: JSON.stringify({ code }),
-    }),
+    withFallback(
+      () =>
+        request<{ verified: boolean; message?: string }>(`/api/bookings/${ref}/otp/verify`, {
+          method: 'POST',
+          body: JSON.stringify({ code }),
+        }),
+      () => mockStore.verifyOtp(ref, code)
+    ),
 
   pay: (ref: string) =>
-    request<{ paymentId: string; status: string }>(`/api/bookings/${ref}/pay`, { method: 'POST' }),
+    withFallback(
+      () => request<{ paymentId: string; status: string }>(`/api/bookings/${ref}/pay`, { method: 'POST' }),
+      () => mockStore.pay(ref)
+    ),
 
   generateTicket: (ref: string) =>
-    request<DetailedTicket>(`/api/bookings/${ref}/ticket`, { method: 'POST' }),
+    withFallback(
+      () => request<DetailedTicket>(`/api/bookings/${ref}/ticket`, { method: 'POST' }),
+      () => mockStore.generateTicket(ref)
+    ),
 };

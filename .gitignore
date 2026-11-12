@@ -12,6 +12,8 @@ yarn-error.log*
 *.log
 .puku/
 rules/
+.vercel
+.vercel/
 
 # Credentials, secrets, and environment files
 .env

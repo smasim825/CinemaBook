@@ -1,0 +1,21 @@
+{
+  "name": "cinemabook",
+  "version": "1.0.0",
+  "private": true,
+  "description": "High-concurrency, zero-oversell movie ticket booking platform",
+  "scripts": {
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:gateway": "npm --prefix gateway run dev",
+    "build": "npm --prefix frontend run build",
+    "build:backend": "npm --prefix backend run build",
+    "build:gateway": "npm --prefix gateway run build",
+    "build:all": "npm run build && npm run build:backend && npm run build:gateway",
+    "lint": "npm --prefix frontend run lint && npm --prefix backend run lint"
+  },
+  "workspaces": [
+    "frontend",
+    "backend",
+    "gateway"
+  ]
+}

@@ -1,8 +1,19 @@
-# CinemaSeat (CinemaBook)
+# CinemaSeat (CinemaBook) 🎬🍿
+
+[![Vercel Deployment](https://img.shields.io/badge/Vercel-Live%20Demo-black?logo=vercel&style=for-the-badge)](https://cinemabook-two.vercel.app)
+[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&style=for-the-badge)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&style=for-the-badge)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite&style=for-the-badge)](https://vitejs.dev/)
+[![TailwindCSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?logo=tailwind-css&style=for-the-badge)](https://tailwindcss.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&style=for-the-badge)](https://www.postgresql.org/)
+[![Redis](https://img.shields.io/badge/Redis-7-DC382D?logo=redis&style=for-the-badge)](https://redis.io/)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&style=for-the-badge)](https://www.docker.com/)
 
 > **Build a movie booking system that stays calm when *Spider-Man: Brand New Day* drops, and never sells the same seat twice.**
 
-CinemaSeat is a high-concurrency, zero-oversell movie ticket booking platform built for blockbuster ticket drops. It guarantees **ACID seat lock consistency**, **asynchronous payment resilience**, and **idempotent webhook processing**.
+**Live Demo**: [https://cinemabook-two.vercel.app](https://cinemabook-two.vercel.app)
+
+CinemaSeat is a high-concurrency, zero-oversell movie ticket booking platform built for blockbuster ticket drops. It guarantees **ACID seat lock consistency**, **asynchronous payment resilience**, and **idempotent webhook processing**. Features a full client-side interactive sandbox preview mode when running on Vercel without an attached backend.
 
 ---
 
@@ -152,8 +163,9 @@ curl -X POST http://localhost:4000/api/showtimes/30000000-0000-0000-0000-0000000
 
 ## 4. Deployed Live URL
 
-- **Production URL**: `http://your-poridhi-vm-ip:5173` (or AWS EC2 Endpoint)
-- **Backend API**: `http://your-poridhi-vm-ip:4000`
+- **Vercel Production Deployment**: [https://cinemabook-two.vercel.app](https://cinemabook-two.vercel.app)
+- **Interactive Sandbox Mode**: When running standalone on Vercel without a database connection, the app runs in full client-side demo mode with real-time seat lock simulation, countdown timers, instant OTP verification (`123456`), and ticket generation with QR code and PDF download.
+- **Backend API (Local / Cloud VM)**: `http://localhost:4000` (Configure `VITE_API_BASE_URL` in `.env` to connect the frontend to a remote backend API).
 
 ---
 
